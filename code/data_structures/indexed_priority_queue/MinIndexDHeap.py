@@ -12,6 +12,10 @@ class MinIndexedDHeap:
         self.D = max(2, degree)
         self.N = max(self.D + 1, maxSize)
 
+        # Create unfilled inverse and position maps
+        # and the values array. We also create arrays
+        # where we will store how to reach of the child 
+        # and parent nodes for each node.
         self.im = [-1] * self.N
         self.pm = [-1] * self.N
         self.child = [0] * self.N
@@ -21,8 +25,8 @@ class MinIndexedDHeap:
         for i in range(self.N):
             self.parent[i] = (i - 1) // self.D
             self.child[i] = i * self.D + 1
-            self.pm[i] = self.im[i] = -1
 
+        # Size of the heap, the number of nodes it contains
         self.sz = 0
 
     def size(self) -> int:
@@ -31,6 +35,8 @@ class MinIndexedDHeap:
     def isEmpty(self) -> bool:
         return self.sz == 0
 
+    # We will check if the key index of the wanted
+    # element is not -1 
     def contains(self, ki: int) -> bool:
         self.keyInBoundsOrThrow(ki)
         return self.pm[ki] != -1
@@ -53,6 +59,12 @@ class MinIndexedDHeap:
         self.delete(self.peekMinKeyIndex())
         return minValue
 
+    # We first insert the new node at the bottom right position,
+    # which is conveniently given by the size of the heap. Insert
+    # it there and then bubble up the node until we preserve the
+    # heap invariance. When we swap nodes we have to take into
+    # account that we have to change the values in the position
+    # and inverse maps. 
     def insert(self, ki: int, value: Any) -> None:
         if self.contains(ki):
             raise ValueError("index already exists; received: " + str(ki))
@@ -67,6 +79,15 @@ class MinIndexedDHeap:
         self.keyExistsOrThrow(ki)
         return self.values[ki]
 
+    # For deletion, we first swap our node with
+    # the lower right node of the heap and then
+    # delete it. Then we have to preserve the heap
+    # invariant, so we have to bubble up or bubble down
+    # the node which previously was on the lower right.
+    # We use both, sink and swim. If it can swim it will,
+    # otherwise it will sink, and otherwise it will mean
+    # that when doing the change we already satisfied
+    # the heap invariant
     def delete(self, ki: int) -> Any:
         self.keyExistsOrThrow(ki)
         i = self.pm[ki]
@@ -79,7 +100,9 @@ class MinIndexedDHeap:
         self.pm[ki] = -1
         self.im[self.sz] = -1
         return value
-
+    
+    # We can update the valuesof our elements, so, when doing
+    # this we have to adapt the values, pm and im arrays
     def update(self, ki: int, value: Any) -> Any:
         self.keyExistsAndValueNotNullOrThrow(ki, value)
         i = self.pm[ki]
